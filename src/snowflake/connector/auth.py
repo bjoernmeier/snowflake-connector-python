@@ -15,7 +15,7 @@ import uuid
 from datetime import datetime
 from os import getenv, makedirs, mkdir, path, remove, removedirs, rmdir
 from os.path import expanduser
-from threading import Lock, Thread
+from threading import Thread
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import (
@@ -64,6 +64,7 @@ from .network import (
 from .options import installed_keyring, keyring
 from .sqlstate import SQLSTATE_CONNECTION_WAS_NOT_ESTABLISHED
 from .version import VERSION
+from .lock import LogLock
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +93,7 @@ logger.debug("cache directory: %s", CACHE_DIR)
 # temporary credential cache
 TEMPORARY_CREDENTIAL = {}
 
-TEMPORARY_CREDENTIAL_LOCK = Lock()
+TEMPORARY_CREDENTIAL_LOCK = LogLock(name="TEMPORARY_CREDENTIAL_LOCK")
 
 # temporary credential cache file name
 TEMPORARY_CREDENTIAL_FILE = "temporary_credential.json"

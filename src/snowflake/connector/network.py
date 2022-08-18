@@ -14,7 +14,6 @@ import logging
 import time
 import traceback
 import uuid
-from threading import Lock
 from typing import TYPE_CHECKING
 
 import OpenSSL.SSL
@@ -101,6 +100,7 @@ from .vendored.requests.exceptions import (
 from .vendored.requests.utils import prepend_scheme_if_needed, select_proxy
 from .vendored.urllib3.exceptions import ProtocolError
 from .vendored.urllib3.util.url import parse_url
+from .lock import LogLock
 
 if TYPE_CHECKING:
     from .connection import SnowflakeConnection
@@ -350,7 +350,7 @@ class SnowflakeRestful:
         self._protocol = protocol
         self._inject_client_pause = inject_client_pause
         self._connection = connection
-        self._lock_token = Lock()
+        self._lock_token = LogLock(name="_lock_token")
         self._sessions_map: dict[str | None, SessionPool] = collections.defaultdict(
             lambda: SessionPool(self)
         )

@@ -14,7 +14,7 @@ import time
 import uuid
 from enum import Enum
 from logging import getLogger
-from threading import Lock, Timer
+from threading import Timer
 from typing import (
     IO,
     TYPE_CHECKING,
@@ -64,6 +64,7 @@ from .options import installed_pandas, pandas
 from .sqlstate import SQLSTATE_FEATURE_NOT_SUPPORTED
 from .telemetry import TelemetryData, TelemetryField
 from .time_util import get_time_millis
+from .lock import LogLock
 
 if TYPE_CHECKING:  # pragma: no cover
     from .connection import SnowflakeConnection
@@ -257,7 +258,7 @@ class SnowflakeCursor:
 
         self._arraysize = 1  # PEP-0249: defaults to 1
 
-        self._lock_canceling = Lock()
+        self._lock_canceling = LogLock(name="_lock_canceling")
 
         self._first_chunk_time = None
 

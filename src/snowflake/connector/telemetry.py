@@ -7,11 +7,11 @@ from __future__ import annotations
 
 import logging
 from enum import Enum, unique
-from threading import Lock
 from typing import TYPE_CHECKING
 
 from .secret_detector import SecretDetector
 from .test_util import ENABLE_TELEMETRY_LOG, rt_plain_logger
+from .lock import LogLock
 
 if TYPE_CHECKING:
     from .network import SnowflakeRestful
@@ -75,7 +75,7 @@ class TelemetryClient:
         self._rest: SnowflakeRestful | None = rest
         self._log_batch = []
         self._flush_size = flush_size or TelemetryClient.DEFAULT_FORCE_FLUSH_SIZE
-        self._lock = Lock()
+        self._lock = LogLock(name="TelemetryClient_lock")
         self._enabled = True
 
     def add_log_to_batch(self, telemetry_data: TelemetryData) -> None:

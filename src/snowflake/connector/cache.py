@@ -13,13 +13,13 @@ import random
 import string
 import tempfile
 from collections.abc import Iterator
-from threading import Lock
 from typing import Generic, NoReturn, TypeVar
 
 from filelock import FileLock, Timeout
 from typing_extensions import NamedTuple, Self
 
 from . import constants
+from .lock import LogLock
 
 now = datetime.datetime.now
 getmtime = os.path.getmtime
@@ -56,7 +56,7 @@ class SFDictCache(Generic[K, V]):
         """Inits a SFDictCache with lifetime."""
         self._entry_lifetime = datetime.timedelta(seconds=entry_lifetime)
         self._cache: dict[K, CacheEntry[V]] = {}
-        self._lock = Lock()
+        self._lock = LogLock(name="SFDictCache_lock")
         self._reset_telemetry()
 
     @classmethod
@@ -457,7 +457,7 @@ class SFDictFileCache(SFDictCache):
             self.last_loaded = now()
             return True
         except OSError:
-            return False
+            raise
 
     def _save(self, load_first: bool = True) -> bool:
         """Save cache to disk if possible, returns whether it was able to save."""
@@ -485,6 +485,7 @@ class SFDictFileCache(SFDictCache):
                 self.last_loaded = datetime.datetime.fromtimestamp(
                     getmtime(self.file_path),
                 )
+                logger.debug(f"finish using {self._file_lock_path}")
                 return True
         except Timeout:
             logger.debug(
@@ -563,5 +564,5 @@ class SFDictFileCache(SFDictCache):
 
     def __setstate__(self, state: dict) -> None:
         self.__dict__.update(state)
-        self._lock = Lock()
+        self._lock = LogLock(name="__setstate___lock")
         self._file_lock = FileLock(self._file_lock_path, timeout=self.file_timeout)

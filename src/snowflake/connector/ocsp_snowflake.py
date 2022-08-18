@@ -20,7 +20,6 @@ from datetime import datetime, timedelta
 from logging import getLogger
 from os import environ, path
 from os.path import expanduser
-from threading import Lock, RLock
 from time import gmtime, strftime
 
 import jwt
@@ -69,6 +68,7 @@ from snowflake.connector.time_util import DecorrelateJitterBackoff
 
 from . import constants
 from .cache import SFDictCache, SFDictFileCache
+from .lock import LogLock, LogRLock
 
 try:
     OCSP_CACHE: SFDictFileCache[
@@ -470,7 +470,7 @@ class OCSPCache:
     CACHE = {}
 
     # OCSP cache lock
-    CACHE_LOCK = Lock()
+    CACHE_LOCK = LogLock(name="OCSPCache_lock")
 
     # OCSP cache update flag
     CACHE_UPDATED = False
@@ -888,7 +888,7 @@ class SFSsd:
     SSD_CACHE = {}
 
     # SSD Cache Lock
-    SSD_CACHE_LOCK = Lock()
+    SSD_CACHE_LOCK = LogLock(name="SFSsd_lock")
 
     # In memory public keys
     ssd_pub_key_dep1 = SSDPubKey()
@@ -988,7 +988,7 @@ class SnowflakeOCSP:
     ROOT_CERTIFICATES_DICT = {}  # root certificates
 
     # root certificate cache lock
-    ROOT_CERTIFICATES_DICT_LOCK = RLock()
+    ROOT_CERTIFICATES_DICT_LOCK = LogRLock(name="SnowflakeOCSP_lock")
 
     # ssd cache object
     SSD = SFSsd()

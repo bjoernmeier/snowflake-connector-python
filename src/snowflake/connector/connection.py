@@ -17,7 +17,6 @@ from difflib import get_close_matches
 from functools import partial
 from io import StringIO
 from logging import getLogger
-from threading import Lock
 from time import strptime
 from typing import Any, Callable, Generator, Iterable, NamedTuple, Sequence
 
@@ -87,6 +86,7 @@ from .telemetry import TelemetryClient
 from .telemetry_oob import TelemetryService
 from .time_util import HeartBeatTimer, get_time_millis
 from .util_text import construct_hostname, parse_account, split_statements
+from .lock import LogLock
 
 DEFAULT_CLIENT_PREFETCH_THREADS = 4
 MAX_CLIENT_PREFETCH_THREADS = 10
@@ -255,13 +255,13 @@ class SnowflakeConnection:
         connection_diag_whitelist_path: path to a whitelist.json file to test with enable_connection_diag.
     """
 
-    OCSP_ENV_LOCK = Lock()
+    OCSP_ENV_LOCK = LogLock(name="OCSP_ENV_LOCK")
 
     def __init__(self, **kwargs):
-        self._lock_sequence_counter = Lock()
+        self._lock_sequence_counter = LogLock(name="_lock_sequence_counter")
         self.sequence_counter = 0
         self._errorhandler = Error.default_errorhandler
-        self._lock_converter = Lock()
+        self._lock_converter = LogLock(name="_lock_converter")
         self.messages = []
         self._async_sfqids = set()
         self._done_async_sfqids = set()
